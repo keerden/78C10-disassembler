@@ -1,28 +1,34 @@
-# Project: disassembler
-# Makefile created by Dev-C++ 5.8.3
 
-CPP      = g++ -D__DEBUG__
-CC       = gcc -D__DEBUG__
-OBJ      = main.o instr-set.o
-LINKOBJ  = main.o instr-set.o
+
+CPP      = g++ 
+CC       = gcc 
+
+OBJDIR   = build/
+OBJ      = main.o registerset.o utils.o
+LINKOBJ  = main.o registerset.o utils.o
+
 LIBS     = -static-libgcc -g3
 BIN      = disassembler
+
 CXXFLAGS = -std=c++11 -g3 -std=c++11
 CFLAGS   =  -std=c++11 -g3 -std=c++11
+
 RM       = rm -f
 
-.PHONY: all all-before all-after clean clean-custom
+SRC=$(wildcard *.cpp)
 
-all: all-before $(BIN) all-after
+OBJS= $(addprefix $(OBJDIR),$(SRC:.cpp=.o))
 
-clean: clean-custom
-	${RM} $(OBJ) $(BIN)
+.PHONY: all clean 
 
-$(BIN): $(OBJ)
-	$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS)
+all: $(BIN)
 
-main.o: main.cpp
-	$(CPP) -c main.cpp -o main.o $(CXXFLAGS)
+$(BIN): $(OBJS) 
+	$(CPP) -o $@ $(OBJS) $(LIBS)
 
-instr-set.o: instr-set.cpp
-	$(CPP) -c instr-set.cpp -o instr-set.o $(CXXFLAGS)
+$(OBJDIR)%.o: %.cpp
+	$(CPP) -c $< -o $@ $(CXXFLAGS)
+
+clean:
+	${RM}   $(BIN) $(OBJS) 
+

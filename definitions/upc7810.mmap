@@ -1,0 +1,16 @@
+#   memory map syntax:
+#   <label> <type> <start_addr> 
+#   
+#   label: Label for the start of the section. May only contain the following chars: [a-zA-Z\-\_] example: IRQ7_softi
+#   type: 'code' for code block, 'data' for data block, 'call_table' for call table block
+#   start_addr: hexadecimal start address, example:  00C0
+#
+# comment starts with #
+IRQ0_reset code 0000
+IRQ1_NMI code 0004
+IRQ2_Interval_Timer code 0008
+IRQ3_External code 0010
+IRQ4_Multi_Timer code 0018
+IRQ5_ADC_Timer code 0020
+IRQ6_serial code 0028
+IRQ7_softi code 0060
