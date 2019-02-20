@@ -1,6 +1,6 @@
 #ifndef MEMMAP_H
 #define MEMMAP_H
- 
+
 #include <list>
 #include <cstdint>
 #include <string>
@@ -10,33 +10,30 @@
 class MemMap
 {
 private:
-    std::list<MemSegment*> memlist;
-    std::stack<uint16_t> pointerStack;
-    int labelCounter;
+  std::list<MemSegment *> memlist;
+  std::stack<uint16_t> pointerStack;
+  std::list<MemSegment *>::iterator iterator;
+  int labelCounter;
 
-    bool insertSegment(MemSegment* seg);
- 
+  bool insertSegment(MemSegment *seg);
+
+
 public:
-    MemMap(): labelCounter(0) {};
-    ~MemMap();
+  MemMap() : labelCounter(0), iterator(memlist.begin()){};
+  ~MemMap();
 
-    uint16_t popPointer();
-    void pushPointer(uint16_t pntr);
-    int stackSize();
+  bool load(std::string file);
 
-    bool load(std::string file);
+  bool stackEmpty();
+  MemSegment *popSegment();
+  void pushSegment(MemSegment *seg);
 
+  MemSegment *changeSegment(MemSegment * current, uint16_t addr);
+  MemSegment *lookup(uint16_t addr);
+  std::string getLabel(uint16_t addr);
 
-    MemSegment* lookupSegment(uint16_t address);
-    bool isSegment(uint16_t address);
-
-
-    int getLenght(uint16_t address);
-    bool addNewLabel(uint16_t address);
-    void print();
-
-
-     
+  MemSegment *iterate(bool first = false);
+  void print();
 };
- 
+
 #endif

@@ -5,6 +5,8 @@
 
 
 using namespace std;
+
+
 void MemSegment::print() {
     cout << hex << start;
     cout << "\t" << name;
@@ -20,5 +22,9 @@ void MemSegment::print() {
             cout << "call_table";
             break;
     }
-    cout << "\t" << hex << pointer <<endl;
+    cout << "\t" << hex << pointer << "\t" << hex << limit << endl;
+}
+
+bool MemSegment::isDissassembled(){
+    return (pointer > limit || (pointer == 0) && start > 0);
 }

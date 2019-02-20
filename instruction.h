@@ -34,7 +34,10 @@ class Instruction
 	regMap* reg;
 	uint8_t argmask1;
 	uint8_t argmask2;	
-	std::string mnemonic;	
+	std::string mnemonic;
+    bool jumps;
+    bool skips;
+    bool noreturn;	
 
     Instruction(    uint8_t len, 
                     uint8_t b1, 
@@ -43,7 +46,10 @@ class Instruction
                     regMap * r, 
                     uint8_t am1, 
                     uint8_t am2, 
-                    std::string mnem
+                    std::string mnem,
+                    bool jps,
+                    bool sks,
+                    bool nret
                 ) :
                     length(len),
                     byte1(b1),
@@ -52,9 +58,12 @@ class Instruction
                     reg(r),
                     argmask1(am1),
                     argmask2(am2),
-                    mnemonic(mnem) 
+                    mnemonic(mnem),
+                    jumps(jps),
+                    skips(sks),
+                    noreturn(nret) 
                {};
-    Instruction() : Instruction(0,0,0,NO_ARGS,NULL,0,0,""){};
+    Instruction() : Instruction(0,0,0,NO_ARGS,NULL,0,0,"", false, false, false){};
     bool has2ndMatchByte();
     bool hasMaskedArgs();
     void print();

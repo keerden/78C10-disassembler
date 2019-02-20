@@ -9,136 +9,93 @@
 #include "utils.h"
 #include "instructionset.h"
 #include "memmap.h"
-#include "assembly.h"
+#include "assemblyline.h"
+#include "assemblyfile.h"
 
 using namespace std;
 
-
-int readfile(char* name, uint8_t*& rawdata);
-int main(int argc, char** argv) {
-	uint8_t* program;
-	uint8_t* ptr;
-	uint16_t current_addr;
-	int size;
-	int len;
-
-	uint16_t offset = 0;
-
-	ofstream outfile;
+int readfile(char *name, uint8_t *&rawdata);
+int main(int argc, char **argv)
+{
+	uint8_t *program;		//array containing raw bytes of program
+	int size;						//size of program
 
 	RegisterSet regset;
-	std::vector<std::string>* result;
-	regset.load("definitions/upc7810.regs");
+	std::vector<std::string> *result;
+	if(!regset.load("definitions/upc7810.regs")){
+		cout << "Parse error in register definition" << endl;
+		return 1;
+	}
 
 	InstructionSet iset(&regset);
-	iset.load("definitions/upc7810.instr");
+	if(!iset.load("definitions/upc7810.instr")){
+		cout << "Parse error in instructions definition" << endl;
+		return 1;
+	}
 
 	MemMap mmap;
-	mmap.load("definitions/upc7810.mmap");
+	if(!mmap.load("definitions/upc7810.mmap")){
+		cout << "Parse error in memory map definition" << endl;
+		return 1;
+	}
 
+	AssemblyFile afile;
 	MemSegment *seg;
 	AssemblyLine aline;
 
-
-    if (argc < 3) {
-        cerr << "Usage: " << argv[0] << " <binary file>  <output file>" << endl;
-        return 1;
-    }
-	
-	outfile.open(argv[2]);
-
+	if (argc < 3)
+	{
+		cerr << "Usage: " << argv[0] << " <binary file>  <output file>" << endl;
+		return 1;
+	}
 	size = readfile(argv[1], program);
 
-	while(mmap.stackSize()) {
-		//pop address
-		current_addr = mmap.popPointer();
-
-		//lookup segment
-		seg = lookupSegment(current_addr);
-
-		//check if segment pointer is not past current pointer
-		if(seg->pointer > current_addr)
-			continue;
-
-		//check if current pointer is not past end of segment
-
-		//disassemble until address is found
-
-		//if adress exists continue disassembling
-		//set current segment's pointer to current pointer
-		//push pointer 
-		//push address and loop
-
-
-
-		seg = mmap.pop();
-		offset = seg.start;
-		len = mmap.getLenght(offset);
-		seg.translated = true;
-		mmap.updateSegment(seg);
-
-		if(len == -1 || (offset + len) > size)
-			len = size - offset;
-
-		cout << seg.name << " len: " << int(len) << endl;
-		do{
-			aline = iset.match(program + offset, &len, &offset);
-			if(aline.address != -1){
-				if(mmap.addNewLabel(aline.address))
-					cout << "new segment! @" << aline.address <<endl;
-				else
-					cout << "known segment! @" << aline.address <<endl;	
-			}
-
-			cout << int(aline.location) << aline.line << " a: " << aline.address << endl;
+	while(!mmap.stackEmpty()){
+		seg = mmap.popSegment();
+		while(!seg->isDissassembled() && seg->pointer < size){
+			//disassemble
+			aline = iset.match(program, size, &seg->pointer);
 			
-		} while (aline.location != -1);
+			//check for invalid instruction
+			if(aline.location == -1){
+				aline.location = seg->pointer;
+				afile.add(aline);
+				break;		//stop disassembly of this segment 
+			} 
 
+			afile.add(aline);
+			
+			// if an address was found
+			if(aline.address != -1) {
+				seg = mmap.changeSegment(seg, (uint16_t) aline.address); 
+			}
+		}
 	}
+	afile.matchLabels(&mmap);
+	afile.write(argv[2],&mmap);
 
-
-
-//	cout << .line <<endl;
-//	cout <<"len " << len << "  offset: " <<offset;
-
-	outfile.close();
 }
 
+int readfile(char *name, uint8_t *&rawdata)
+{
+	streamoff size;
 
+	ifstream file(name, ios::in | ios::binary | ios::ate);
+	if (file.is_open())
+	{
+		size = file.tellg();
+		rawdata = new uint8_t[(size + 3) * sizeof(char) / sizeof(uint8_t)];
 
-int readfile(char* name, uint8_t*& rawdata) {
-  streamoff size;
+		file.seekg(0, ios::beg);
+		file.read((char *)rawdata, size);
+		file.close();
 
-  ifstream file (name, ios::in|ios::binary|ios::ate);
-  if (file.is_open())
-  {
-    size = file.tellg();
-    rawdata = new uint8_t [(size + 3) * sizeof(char) / sizeof(uint8_t)];
-    
-    file.seekg (0, ios::beg);
-    file.read ((char*) rawdata, size);
-    file.close();
-
-	rawdata[size] = 0xFF;
-	rawdata[size+1] = 0xFF;
-	rawdata[size+2] = 0xFF;
-    return int(size);
-  }
-  else cout << "Unable to open file";
-  return -1;
+		rawdata[size] = 0xFF;
+		rawdata[size + 1] = 0xFF;
+		rawdata[size + 2] = 0xFF;
+		return int(size);
+	}
+	else
+		cout << "Unable to open file";
+	return -1;
 }
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-

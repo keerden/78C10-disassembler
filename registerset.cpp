@@ -7,8 +7,10 @@
 
 using namespace std;
 
-RegisterSet:~RegisterSet() {
-	while(!regset.empty()) delete regset.front(), regset.pop_front();
+RegisterSet::~RegisterSet() {
+	 for(auto elem : regset){
+		 delete elem.second;
+	 }
 }
 
 void RegisterSet::add(regMap *r, string name) {

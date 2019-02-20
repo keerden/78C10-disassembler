@@ -5,3 +5,7 @@ disassembler
 
 *.bin
 *.asm
+
+build/
+.d/
+programs/

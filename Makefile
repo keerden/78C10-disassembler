@@ -3,32 +3,46 @@
 CPP      = g++ 
 CC       = gcc 
 
-OBJDIR   = build/
-OBJ      = main.o registerset.o utils.o
-LINKOBJ  = main.o registerset.o utils.o
+OBJDIR   = build
+$(shell mkdir -p $(OBJDIR) >/dev/null)
+
+DEPDIR 	 = .d
+$(shell mkdir -p $(DEPDIR) >/dev/null)
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+POSTCOMPILE = @mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d && touch $@
+
 
 LIBS     = -static-libgcc -g3
 BIN      = disassembler
 
-CXXFLAGS = -std=c++11 -g3 -std=c++11
-CFLAGS   =  -std=c++11 -g3 -std=c++11
+CXXFLAGS = $(DEPFLAGS) -std=c++11 -g3 -std=c++11 
 
 RM       = rm -f
 
 SRC=$(wildcard *.cpp)
 
-OBJS= $(addprefix $(OBJDIR),$(SRC:.cpp=.o))
+OBJS= $(addprefix $(OBJDIR)/,$(SRC:.cpp=.o))
 
-.PHONY: all clean 
+.PHONY: all clean clean-all test
+
 
 all: $(BIN)
 
 $(BIN): $(OBJS) 
 	$(CPP) -o $@ $(OBJS) $(LIBS)
 
-$(OBJDIR)%.o: %.cpp
+$(OBJDIR)/%.o: %.cpp $(DEPDIR)/%.d
 	$(CPP) -c $< -o $@ $(CXXFLAGS)
+	$(POSTCOMPILE)
 
 clean:
-	${RM}   $(BIN) $(OBJS) 
+	@${RM} $(OBJS)
+	@${RM} $(DEPDIR)/*
 
+clean-all: clean
+	@${RM} $(BIN) 
+
+$(DEPDIR)/%.d: ;
+.PRECIOUS: $(DEPDIR)/%.d
+
+include $(wildcard $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC))))
